@@ -18,7 +18,7 @@ class PaymentsJournal(S3PParserBase):
     HOST = "https://www.paymentsjournal.com/news/"
 
     def __init__(self, refer: S3PRefer, plugin: S3PPlugin, web_driver: WebDriver, max_count_documents: int = None,
-                 last_document: S3PDocument = None, num_scrolls: int = None):
+                 last_document: S3PDocument = None, num_scrolls: int = 5):
         super().__init__(refer, plugin, max_count_documents, last_document)
 
         # Тут должны быть инициализированы свойства, характерные для этого парсера. Например: WebDriver
