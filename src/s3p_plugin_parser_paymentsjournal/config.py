@@ -7,7 +7,7 @@ from s3p_sdk.plugin.config import (
     trigger,
     MiddlewareConfig,
     modules,
-    payload
+    payload, RestrictionsConfig
 )
 from s3p_sdk.plugin.types import SOURCE
 from s3p_sdk.module import (
@@ -18,8 +18,14 @@ config = PluginConfig(
     plugin=CoreConfig(
         reference='paymentsjournal',         # уникальное имя источника
         type=SOURCE,                            # Тип источника (SOURCE, ML, PIPELINE)
-        files=['PaymentsJournal.py', ],        # Список файлов, которые будут использоваться в плагине (эти файлы будут сохраняться в платформе)
-        is_localstorage=False
+        files=['payments_journal.py', ],        # Список файлов, которые будут использоваться в плагине (эти файлы будут сохраняться в платформе)
+        is_localstorage=False,
+        restrictions=RestrictionsConfig(
+            maximum_materials=None,
+            to_last_material=None,
+            from_date=datetime.datetime(2024, 8, 1),
+            to_date=None,
+        )
     ),
     task=TaskConfig(
         trigger=trigger.TriggerConfig(
@@ -30,21 +36,18 @@ config = PluginConfig(
     middleware=MiddlewareConfig(
         modules=[
             modules.TimezoneSafeControlConfig(order=1, is_critical=True),
-            modules.FilterOnlyNewDocumentWithDB(order=2, is_critical=True),
-            modules.SaveDocument(order=3, is_critical=True),
+            modules.SaveOnlyNewDocuments(order=2, is_critical=True),
         ],
         bus=None,
     ),
     payload=payload.PayloadConfig(
-        file='PaymentsJournal.py',                 # python файл плагина (точка входа). Этот файл должен быть указан в `plugin.files[*]`
+        file='payments_journal.py',                 # python файл плагина (точка входа). Этот файл должен быть указан в `plugin.files[*]`
         classname='PaymentsJournal',               # имя python класса в указанном файле
         entry=payload.entry.EntryConfig(
             method='content',
             params=[
                 payload.entry.ModuleParamConfig(key='web_driver', module_name=WebDriver, bus=True),
-                payload.entry.ConstParamConfig(key='max_count_documents', value=10),
-                payload.entry.ConstParamConfig(key='num_scrolls',
-                                               value=5),
+                payload.entry.ConstParamConfig(key='num_scrolls', value=5),
             ]
         )
     )
